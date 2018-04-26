@@ -10,7 +10,6 @@ function animate() {
       spheres[s].material.uniforms.amplitude.value = (total / range) / 255;
   }
   let cameraMovement = spheres[5].material.uniforms.amplitude.value;
-  //console.log(cameraMovement);
   camera.position.z = 20 - (10 * 2 * (cameraMovement - 0.5));
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
@@ -72,8 +71,6 @@ let camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 20;
 
-let control = new THREE.OrbitControls(camera);
-
 let spheres = [];
 let positions = [
   new THREE.Vector3(-16 + 10.66, 4, 0),
@@ -85,8 +82,6 @@ let positions = [
   new THREE.Vector3(-16 + 3 * 10.66, 4, 0),
   new THREE.Vector3(-16 + 3 * 10.66, -4, 0),
 ];
-
-console.log(positions);
 
 for (let i = 0; i < 8; i++) {
   let sphereGeometry = new THREE.SphereBufferGeometry(3, 100, 100);
@@ -102,7 +97,6 @@ for (let i = 0; i < 8; i++) {
   });
   let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
   sphere.position.set(positions[i].x, positions[i].y, positions[i].z);
-  console.log(sphere.position);
   scene.add(sphere);
 
   let displacement = [];
