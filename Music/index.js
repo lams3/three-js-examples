@@ -7,10 +7,24 @@ function animate() {
     for (let i = initial; i < initial + range; i++)
       total += dataArray[i];
 
-      spheres[s].material.uniforms.amplitude.value = (total / range) / 255;
+    spheres[s].material.uniforms.amplitude.value = (total / range) / 255;
   }
   let cameraMovement = spheres[5].material.uniforms.amplitude.value;
   camera.position.z = 20 - (10 * 2 * (cameraMovement - 0.5));
+    
+  for (let i = particleCount - 1; i >= 0; i--) {
+    let particle = particles.vertices[i];
+    if (particle.y > 250 || particle.y < -250 || particle.x > 250 || particle.x < -250) {
+      particle.y = 500 * Math.random() - 250;
+      particle.x = 500 * Math.random() - 250;
+      particle.velocity.y = -0.01;
+    }
+    
+    particle.velocity.y -= Math.random() * cameraMovement;
+    particle.add(particle.velocity);
+  }
+  particleSystem.geometry.verticesNeedUpdate = true;
+  
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
@@ -67,7 +81,7 @@ document.body.appendChild(renderer.domElement);
 let scene = new THREE.Scene();
 
 let camera = new THREE.PerspectiveCamera(
-  75, window.innerWidth / window.innerHeight, 5, 100
+  75, window.innerWidth / window.innerHeight, 5, 1000
 );
 camera.position.z = 20;
 
@@ -84,7 +98,7 @@ let positions = [
 ];
 
 for (let i = 0; i < 8; i++) {
-  let sphereGeometry = new THREE.SphereBufferGeometry(3, 100, 100);
+  let sphereGeometry = new THREE.SphereBufferGeometry(3, 30, 30);
   let sphereMaterial = new THREE.ShaderMaterial({
     vertexShader: vShader,
     fragmentShader: fShader,
@@ -98,16 +112,53 @@ for (let i = 0; i < 8; i++) {
   let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
   sphere.position.set(positions[i].x, positions[i].y, positions[i].z);
   scene.add(sphere);
-
+  
   let displacement = [];
   let vertices = sphereGeometry.attributes.position;
   for (let j = 0; j < vertices.count; j++)
-    displacement.push(Math.random() * 3);
+  displacement.push(Math.random() * 3);
   displacement = new Float32Array(displacement);
   sphereGeometry.addAttribute('displacement', new THREE.BufferAttribute(displacement, 1));
-
+  
   spheres.push(sphere);
 }
 
+
+let light = new THREE.PointLight(0xffffff, 1.5, 700, 2);
+scene.add(light);
+scene.add(light.target);
+
+const particleCount = 20000;
+const particles = new THREE.Geometry();
+let particlesMaterial = new THREE.PointsMaterial({
+  size: 5,
+  blending: THREE.AdditiveBlending,
+  alphaTest: 0.0,
+  transparent: true
+});
+let particleSystem = new THREE.Points(particles, particlesMaterial);
+
+
+for (let i = 0; i < particleCount; i++) {
+  let x = Math.random() * 500 - 250;
+  let y = Math.random() * 500 - 250;
+  let z = Math.random() * 500 - 250;
+  let particle = new THREE.Vector3(x, y, z);
+  particle.velocity = new THREE.Vector3(0, -0.01, 0);
+  particles.vertices.push(particle);
+}
+
+particles.vertices.sort((a, b) => {
+  return a.z - b.z;
+});
+
+let textureLoader = new THREE.TextureLoader();
+textureLoader.crossOrigin = true;
+let string = 'https://aerotwist.com/static/tutorials/creating-particles-with-three-js/images/particle.png';
+textureLoader.load(string, texture => {
+  particlesMaterial.map = texture;
+  particlesMaterial.needsUpdate = true;
+  scene.add(particleSystem);
+});
 
 animate();
